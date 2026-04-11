@@ -1,0 +1,65 @@
+▶️ Run the application
+
+Using Maven
+mvn spring-boot:run
+
+🧪 Run tests
+mvn test
+
+📡 API testing examples
+
+📌 Quote Service API Documentation
+
+This document describes the available REST API endpoints for the Quote Service backend built with Spring Boot.
+
+Base URL:
+
+http://localhost:8080/api/quotes
+1. ➕ Create a Quote
+
+Creates a new insurance quote.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes" `
+-Method POST `
+-ContentType "application/json" `
+-Body '{"productId": 1, "zoneCode": "TUN", "clientName": "John Doe", "clientAge": 30}'
+2. 🔍 Get Quote by ID
+
+Retrieves a specific quote using its ID.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes/1" -Method GET
+3. ➕ Create Another Quote
+
+Example of creating a second quote.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes" `
+-Method POST `
+-ContentType "application/json" `
+-Body '{"productId": 1, "zoneCode": "TUN", "clientName": "Jane", "clientAge": 20}'
+4. 📄 Get All Quotes
+
+Fetch all stored quotes.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes" -Method GET
+5. 🔎 Filter by Product ID
+
+Fetch quotes filtered by product ID.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes?productId=1" -Method GET
+6. 💰 Filter by Minimum Price
+
+Fetch quotes where price is above a minimum value.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes?minPrice=600" -Method GET
+7. ❌ Test 404 (Non-existent Quote)
+
+Used to test error handling when quote does not exist.
+
+Request
+Invoke-WebRequest -Uri "http://localhost:8080/api/quotes/999" -Method GET

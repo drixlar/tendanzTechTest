@@ -1,0 +1,68 @@
+🚀 Full-Stack Insurance Pricing System
+This project is a technical assessment consisting of a Spring Boot 3 backend (Pricing Engine) and an Angular 18 frontend (Quote Management). It allows users to calculate insurance quotes based on product, age, and geographical zone.
+
+🛠️ Tech Stack
+Backend: Java 17, Spring Boot 3, Spring Data JPA, H2 Database (In-memory), Maven.
+
+Frontend: Angular 18 (Standalone Components), Reactive Forms, RxJS, CSS3.
+
+🏗️ Getting Started
+1. Backend Setup (Spring Boot)
+The backend manages product data and calculates pricing based on specific business rules.
+
+Navigate to the backend folder.
+
+Configure CORS: Ensure ProductController and QuoteController have @CrossOrigin(origins = "http://localhost:4200").
+
+Run the application:
+
+Bash
+mvn spring-boot:run
+Database Console: Access the H2 console at http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:testdb).
+
+API Endpoints:
+
+GET /api/products: List available insurance products.
+
+POST /api/quotes: Calculate and save a new quote.
+
+GET /api/quotes: Retrieve all calculated quotes.
+
+2. Frontend Setup (Angular)
+The frontend provides a modern UI for agents to select products and generate quotes.
+
+Navigate to the frontend folder.
+
+Install dependencies:
+
+Bash
+npm install
+Environment Config: Verify src/environments/environment.ts points to the correct API:
+
+TypeScript
+export const environment = {
+  apiUrl: 'http://localhost:8080/api'
+};
+Run the application:
+
+Bash
+ng serve
+Access the UI: Open http://localhost:4200 in your browser.
+
+📋 Features
+Product Selection: Fetches real-time insurance products from the backend.
+
+Reactive Form: Includes validation for age (18-99), name length, and required fields.
+
+Dynamic Pricing: The backend calculates premium totals based on basePrice * zoneMultiplier + ageSurcharge.
+
+Quote History: A searchable and filterable list of all previously generated quotes.
+
+🧪 Testing
+Backend: Run mvn test to execute TESTS
+
+
+🛡️ Troubleshooting
+Empty Product Dropdown: Check the browser console (F12) for CORS errors. Ensure the @CrossOrigin import is present in Java controllers.
+
+Connection Refused: Ensure the backend is fully started on port 8080 before launching the Angular app.

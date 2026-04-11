@@ -43,13 +43,18 @@ class PricingServiceTest {
     private Product product;
     private Zone zone;
 
+    // runs before every test - cleans the DB and sets up fresh test data
+
     @BeforeEach
     void setUp() {
+
+    // clear in correct order to respect foreign keys
         quoteRepository.deleteAll();
         pricingRuleRepository.deleteAll();
         zoneRepository.deleteAll();
         productRepository.deleteAll();
 
+    // create a simple product to test with
         product = Product.builder()
                 .name("Test Auto Insurance")
                 .description("Test Description")
@@ -57,6 +62,7 @@ class PricingServiceTest {
                 .build();
         productRepository.save(product);
 
+    // Tunis zone with 1.20 risk coefficient
         zone = Zone.builder()
                 .code("TUN")
                 .name("Grand Tunis")
@@ -76,6 +82,7 @@ class PricingServiceTest {
         pricingRuleRepository.save(pricingRule);
     }
 
+    // age 30 = ADULT, factor 1.00 → 500 * 1.00 * 1.20 = 600.00
     @Test
     void testCalculateQuoteForAdult() {
         QuoteRequest request = QuoteRequest.builder()
@@ -92,6 +99,7 @@ class PricingServiceTest {
         assertEquals(new BigDecimal("600.00"), response.getFinalPrice());
     }
 
+    // age 20 = YOUNG, factor 1.30 → 500 * 1.30 * 1.20 = 780.00
     @Test
     void testCalculateQuoteForYoungClient() {
         QuoteRequest request = QuoteRequest.builder()
@@ -106,6 +114,7 @@ class PricingServiceTest {
         assertEquals(new BigDecimal("780.00"), response.getFinalPrice());
     }
 
+    // age 50 = SENIOR, factor 1.20 → 500 * 1.20 * 1.20 = 720.00
     @Test
     void testCalculateQuoteForSeniorClient() {
         QuoteRequest request = QuoteRequest.builder()
@@ -120,6 +129,7 @@ class PricingServiceTest {
         assertEquals(new BigDecimal("720.00"), response.getFinalPrice());
     }
 
+    // product ID 999 doesn't exist - service should throw
     @Test
     void testCalculateQuoteWithInvalidProductId() {
         QuoteRequest request = QuoteRequest.builder()
@@ -133,6 +143,7 @@ class PricingServiceTest {
                 pricingService.calculateQuote(request));
     }
 
+    // zone code XXX doesn't exist - service should throw
     @Test
     void testCalculateQuoteWithInvalidZoneCode() {
         QuoteRequest request = QuoteRequest.builder()
@@ -146,6 +157,8 @@ class PricingServiceTest {
                 pricingService.calculateQuote(request));
     }
 
+    // checks the age category boundaries:
+    // 24 → YOUNG, 25 → ADULT, 46 → SENIOR, 99 → ELDERLY
     @Test
     void testAgeBoundaries() {
         QuoteRequest r1 = QuoteRequest.builder()
@@ -169,6 +182,8 @@ class PricingServiceTest {
         assertEquals(new BigDecimal("900.00"), pricingService.calculateQuote(r4).getFinalPrice());
     }
 
+    // makes sure we can retrieve a quote after saving it
+    // and that all the fields come back correctly
     @Test
     void testGetQuoteById() {
         QuoteRequest request = QuoteRequest.builder()
