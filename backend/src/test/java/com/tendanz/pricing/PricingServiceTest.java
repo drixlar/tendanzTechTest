@@ -10,22 +10,19 @@ import com.tendanz.pricing.repository.ProductRepository;
 import com.tendanz.pricing.repository.QuoteRepository;
 import com.tendanz.pricing.repository.ZoneRepository;
 import com.tendanz.pricing.service.PricingService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-@Import({PricingService.class, ObjectMapper.class})
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class PricingServiceTest {
 
     @Autowired
@@ -45,7 +42,6 @@ class PricingServiceTest {
 
     private Product product;
     private Zone zone;
-    private PricingRule pricingRule;
 
     @BeforeEach
     void setUp() {
@@ -68,7 +64,7 @@ class PricingServiceTest {
                 .build();
         zoneRepository.save(zone);
 
-        pricingRule = PricingRule.builder()
+        PricingRule pricingRule = PricingRule.builder()
                 .product(product)
                 .baseRate(BigDecimal.valueOf(500.00))
                 .ageFactorYoung(BigDecimal.valueOf(1.30))
@@ -82,7 +78,6 @@ class PricingServiceTest {
 
     @Test
     void testCalculateQuoteForAdult() {
-        // adult: 500 × 1.00 × 1.20 = 600.00
         QuoteRequest request = QuoteRequest.builder()
                 .productId(product.getId())
                 .zoneCode("TUN")
@@ -99,7 +94,6 @@ class PricingServiceTest {
 
     @Test
     void testCalculateQuoteForYoungClient() {
-        // young: 500 × 1.30 × 1.20 = 780.00
         QuoteRequest request = QuoteRequest.builder()
                 .productId(product.getId())
                 .zoneCode("TUN")
@@ -108,14 +102,12 @@ class PricingServiceTest {
                 .build();
 
         QuoteResponse response = pricingService.calculateQuote(request);
-
         assertNotNull(response);
         assertEquals(new BigDecimal("780.00"), response.getFinalPrice());
     }
 
     @Test
     void testCalculateQuoteForSeniorClient() {
-        // senior: 500 × 1.20 × 1.20 = 720.00
         QuoteRequest request = QuoteRequest.builder()
                 .productId(product.getId())
                 .zoneCode("TUN")
@@ -124,7 +116,6 @@ class PricingServiceTest {
                 .build();
 
         QuoteResponse response = pricingService.calculateQuote(request);
-
         assertNotNull(response);
         assertEquals(new BigDecimal("720.00"), response.getFinalPrice());
     }
@@ -157,40 +148,24 @@ class PricingServiceTest {
 
     @Test
     void testAgeBoundaries() {
-        // age 24 -> YOUNG: 500 × 1.30 × 1.20 = 780.00
         QuoteRequest r1 = QuoteRequest.builder()
-                .productId(product.getId())
-                .zoneCode("TUN")
-                .clientName("A")
-                .clientAge(24)
-                .build();
+                .productId(product.getId()).zoneCode("TUN")
+                .clientName("A").clientAge(24).build();
         assertEquals(new BigDecimal("780.00"), pricingService.calculateQuote(r1).getFinalPrice());
 
-        // age 25 -> ADULT: 500 × 1.00 × 1.20 = 600.00
         QuoteRequest r2 = QuoteRequest.builder()
-                .productId(product.getId())
-                .zoneCode("TUN")
-                .clientName("B")
-                .clientAge(25)
-                .build();
+                .productId(product.getId()).zoneCode("TUN")
+                .clientName("B").clientAge(25).build();
         assertEquals(new BigDecimal("600.00"), pricingService.calculateQuote(r2).getFinalPrice());
 
-        // age 46 -> SENIOR: 500 × 1.20 × 1.20 = 720.00
         QuoteRequest r3 = QuoteRequest.builder()
-                .productId(product.getId())
-                .zoneCode("TUN")
-                .clientName("C")
-                .clientAge(46)
-                .build();
+                .productId(product.getId()).zoneCode("TUN")
+                .clientName("C").clientAge(46).build();
         assertEquals(new BigDecimal("720.00"), pricingService.calculateQuote(r3).getFinalPrice());
 
-        // age 99 -> ELDERLY: 500 × 1.50 × 1.20 = 900.00
         QuoteRequest r4 = QuoteRequest.builder()
-                .productId(product.getId())
-                .zoneCode("TUN")
-                .clientName("D")
-                .clientAge(99)
-                .build();
+                .productId(product.getId()).zoneCode("TUN")
+                .clientName("D").clientAge(99).build();
         assertEquals(new BigDecimal("900.00"), pricingService.calculateQuote(r4).getFinalPrice());
     }
 

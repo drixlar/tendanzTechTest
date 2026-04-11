@@ -151,6 +151,7 @@ public class PricingService {
     /**
      * Get quote by ID.
      */
+    @Transactional
     public QuoteResponse getQuote(Long id) {
         Quote quote = quoteRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Quote not found with ID: " + id));
