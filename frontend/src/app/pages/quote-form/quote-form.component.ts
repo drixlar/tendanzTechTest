@@ -6,9 +6,6 @@ import { QuoteService } from '../../services/quote.service';
 import { ProductService } from '../../services/product.service';
 import { Product } from '../../models/product.model';
 
-/**
- * Available zones with their codes (must match backend data.sql)
- */
 const ZONES = [
   { code: 'TUN', name: 'Grand Tunis' },
   { code: 'SFX', name: 'Sfax' },
@@ -16,19 +13,9 @@ const ZONES = [
 ];
 
 /**
- * Component for creating a new quote
- *
- * TODO: Candidate must implement the following:
- * 1. Load products from ProductService on init and populate the product dropdown
- *
- * 2. Implement form submission in onSubmit():
- *    - Validate form before submission
- *    - Build a QuoteRequest from form values
- *    - Call QuoteService.createQuote()
- *    - Show success/error message
- *    - Navigate to quote detail page on success
- *
- * 3. Handle loading state while API request is in progress
+ * Component for creating a new insurance quote.
+ * Loads available products from the API, presents a reactive form,
+ * and submits a quoteRequest to the backend on valid submission.
  */
 @Component({
   selector: 'app-quote-form',
@@ -52,40 +39,68 @@ export class QuoteFormComponent implements OnInit {
     private productService: ProductService,
     private router: Router
   ) {
+    // Build the reactive form with all required validators
     this.form = this.fb.group({
       clientName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      productId: ['', [Validators.required]],
-      zoneCode: ['', [Validators.required]],
-      clientAge: ['', [Validators.required, Validators.min(18), Validators.max(99)]]
+      productId:  ['', [Validators.required]],
+      zoneCode:   ['', [Validators.required]],
+      clientAge:  ['', [Validators.required, Validators.min(18), Validators.max(99)]]
     });
   }
 
   ngOnInit(): void {
-    // TODO: Load products from ProductService
-    // TODO: Populate this.products array
-    // TODO: Handle loading and error states
+    // Fetch the list of available insurance products from the backend
+    // and populate the product dropdown in the form
+    this.productService.getProducts().subscribe({
+      next: (products) => {
+        this.products = products;
+      },
+      error: (err) => {
+        // Show error in the UI if products can't be loaded
+        this.errorMessage = err.message || 'Failed to load products.';
+      }
+    });
   }
 
-  /**
-   * Submit the form
-   *
-   * TODO: Implement form submission
-   * - Check if form is valid (mark all fields as touched if invalid)
-   * - Set loading state
-   * - Build QuoteRequest: { productId: number, zoneCode: string, clientName: string, clientAge: number }
-   * - Call quoteService.createQuote(request)
-   * - On success: show message, navigate to /quotes/{quoteId}
-   * - On error: show error message
-   * - Always reset loading state
-   */
   onSubmit(): void {
     this.submitted = true;
-    // TODO: Implement form submission
-    console.log('Form submitted (TODO: implement)');
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    // Stop here and highlight invalid fields if the form is not valid
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    // Build the QuoteRequest payload matching the backend DTO
+    // Note: form values are strings by default, so we cast explicitly
+    const request = {
+      clientName: this.form.value.clientName as string,
+      clientAge:  Number(this.form.value.clientAge),
+      productId:  Number(this.form.value.productId),
+      zoneCode:   this.form.value.zoneCode as string
+    };
+
+    this.loading = true;
+
+    this.quoteService.createQuote(request).subscribe({
+      next: (quote) => {
+        this.successMessage = `Quote #${quote.quoteId} created successfully!`;
+        this.loading = false;
+        // Redirect to the detail page of the newly created quote
+        this.router.navigate(['/quotes', quote.quoteId]);
+      },
+      error: (err) => {
+        // Display the error returned by the backend (e.g. unknown zone, invalid product)
+        this.errorMessage = err.message || 'Failed to create quote.';
+        this.loading = false;
+      }
+    });
   }
 
   /**
-   * Check if a form field has an error (provided helper)
+   * Returns true if the given field has the specified error and has been interacted with.
    */
   hasError(fieldName: string, errorType: string): boolean {
     const field = this.form.get(fieldName);
@@ -93,7 +108,7 @@ export class QuoteFormComponent implements OnInit {
   }
 
   /**
-   * Check if a form field is invalid (provided helper)
+   * Returns true if the field is invalid and has been interacted with.
    */
   isFieldInvalid(fieldName: string): boolean {
     const field = this.form.get(fieldName);
@@ -101,16 +116,16 @@ export class QuoteFormComponent implements OnInit {
   }
 
   /**
-   * Get error message for a field (provided helper)
+   * Returns a human-readable error message for the first error on a field.
    */
   getErrorMessage(fieldName: string): string {
     const field = this.form.get(fieldName);
     if (!field || !field.errors) return '';
 
-    if (field.hasError('required')) return `This field is required`;
+    if (field.hasError('required'))  return `This field is required`;
     if (field.hasError('minlength')) return `Minimum ${field.errors['minlength'].requiredLength} characters`;
-    if (field.hasError('min')) return `Minimum value is ${field.errors['min'].min}`;
-    if (field.hasError('max')) return `Maximum value is ${field.errors['max'].max}`;
+    if (field.hasError('min'))       return `Minimum value is ${field.errors['min'].min}`;
+    if (field.hasError('max'))       return `Maximum value is ${field.errors['max'].max}`;
 
     return 'Invalid input';
   }

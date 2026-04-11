@@ -6,19 +6,7 @@ import { environment } from '../../environments/environment';
 import { QuoteRequest, QuoteResponse } from '../models/quote.model';
 
 /**
- * Service for managing quotes
- * This service handles all API communication with the backend pricing engine
- *
- * TODO: Candidate must implement the following methods:
- * - createQuote(request: QuoteRequest): Observable<QuoteResponse>
- * - getQuote(id: number): Observable<QuoteResponse>
- * - getQuotes(filters?: {productId?: number, minPrice?: number}): Observable<QuoteResponse[]>
- *
- * Requirements:
- * - Use HttpClient for HTTP requests
- * - Use catchError operator to handle errors
- * - Base URL should be configurable via environment.apiUrl
- * - Handle error responses appropriately (log errors, throw user-friendly messages)
+ * Service for all quote-related API communication with the backend pricing engine
  */
 @Injectable({
   providedIn: 'root'
@@ -30,70 +18,56 @@ export class QuoteService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Create a new quote
    * POST /api/quotes
-   *
-   * @param request Quote request data
-   * @returns Observable of the created quote response with calculated pricing
-   *
-   * TODO: Implement this method
    */
   createQuote(request: QuoteRequest): Observable<QuoteResponse> {
-    // TODO: POST to ${this.apiUrl}${this.endpoint}
-    // TODO: Send request body
-    // TODO: Handle errors with catchError
-    // TODO: Provide error feedback to user
-    throw new Error('Method not implemented');
+    return this.http
+      .post<QuoteResponse>(`${this.apiUrl}${this.endpoint}`, request)
+      .pipe(catchError(this.handleError));
   }
 
   /**
-   * Get a single quote by ID
    * GET /api/quotes/:id
-   *
-   * @param id Quote ID
-   * @returns Observable of the quote details
-   *
-   * TODO: Implement this method
    */
   getQuote(id: number): Observable<QuoteResponse> {
-    // TODO: GET from ${this.apiUrl}${this.endpoint}/${id}
-    // TODO: Handle errors with catchError
-    throw new Error('Method not implemented');
+    return this.http
+      .get<QuoteResponse>(`${this.apiUrl}${this.endpoint}/${id}`)
+      .pipe(catchError(this.handleError));
   }
 
   /**
-   * Get all quotes with optional filtering
+   * Fetch all quotes, with optional filtering by product and minimum price.
    * GET /api/quotes?productId=X&minPrice=Y
-   *
-   * @param filters Optional filter criteria
-   * @param filters.productId Filter by product ID
-   * @param filters.minPrice Filter by minimum price
-   * @returns Observable of array of quotes
-   *
-   * TODO: Implement this method
    */
   getQuotes(filters?: { productId?: number; minPrice?: number }): Observable<QuoteResponse[]> {
-    // TODO: GET from ${this.apiUrl}${this.endpoint}
-    // TODO: Build HttpParams with optional filters
-    // TODO: Pass params to HTTP request
-    // TODO: Handle errors with catchError
-    throw new Error('Method not implemented');
+    // Build query params only for filter values that were actually provided
+    let params = new HttpParams();
+    if (filters?.productId !== undefined) {
+      params = params.set('productId', filters.productId);
+    }
+    if (filters?.minPrice !== undefined) {
+      params = params.set('minPrice', filters.minPrice);
+    }
+
+    return this.http
+      .get<QuoteResponse[]>(`${this.apiUrl}${this.endpoint}`, { params })
+      .pipe(catchError(this.handleError));
   }
 
   /**
-   * Handle HTTP errors
-   *
-   * @param error The error object from HttpClient
-   * @returns Observable that throws a user-friendly error message
-   *
-   * TODO: Implement error handling
-   * - Log error to console for debugging
-   * - Extract error message from backend response or use default
-   * - Return Observable error with appropriate message
+   * Maps HTTP errors to user-friendly messages.
+   * Prefers the message from the backend response body when available.
    */
   private handleError(error: any): Observable<never> {
-    // TODO: Implement error handling
     console.error('Quote service error:', error);
-    return throwError(() => new Error('Failed to process quote'));
+
+    // Use the backend error message if provided, otherwise fall back to defaults
+    const message =
+      error.error?.message ||
+      (error.status === 404 ? 'Quote not found.' :
+       error.status === 400 ? 'Invalid request data.' :
+       'Failed to process quote.');
+
+    return throwError(() => new Error(message));
   }
 }

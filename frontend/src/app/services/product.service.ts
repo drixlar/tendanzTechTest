@@ -6,15 +6,7 @@ import { environment } from '../../environments/environment';
 import { Product } from '../models/product.model';
 
 /**
- * Service for managing products (insurance products)
- *
- * TODO: Candidate must implement the following method:
- * - getProducts(): Observable<Product[]>
- *
- * Requirements:
- * - Use HttpClient for HTTP requests
- * - Use catchError operator to handle errors
- * - Base URL should be configurable via environment.apiUrl
+ * Service for fetching available insurance products from the backend.
  */
 @Injectable({
   providedIn: 'root'
@@ -26,28 +18,17 @@ export class ProductService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get all available products
+   * Fetch all available insurance products.
    * GET /api/products
-   *
-   * @returns Observable of array of products
-   *
-   * TODO: Implement this method
-   * - GET from ${this.apiUrl}${this.endpoint}
-   * - Handle errors with catchError
    */
   getProducts(): Observable<Product[]> {
-    // TODO: GET from ${this.apiUrl}${this.endpoint}
-    // TODO: Handle errors with catchError
-    throw new Error('Method not implemented');
+    return this.http
+      .get<Product[]>(`${this.apiUrl}${this.endpoint}`)
+      .pipe(catchError(this.handleError));
   }
 
   /**
-   * Handle HTTP errors
-   *
-   * @param error The error object from HttpClient
-   * @returns Observable that throws a user-friendly error message
-   *
-   * TODO: Implement error handling if needed
+   * Maps HTTP errors to a error message.
    */
   private handleError(error: any): Observable<never> {
     console.error('Product service error:', error);

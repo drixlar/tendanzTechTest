@@ -66,7 +66,7 @@ public class PricingService {
         BigDecimal ageFactor = getAgeFactor(pricingRule, ageCategory);
 
         // base & coeffs
-        BigDecimal baseRate = product.getBaseRate();
+        BigDecimal baseRate = pricingRule.getBaseRate();
         BigDecimal zoneCoeff = zone.getRiskCoefficient();
 
         // 6. calc final price

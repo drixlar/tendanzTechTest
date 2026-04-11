@@ -16,13 +16,5 @@ public class PricingApplication {
         SpringApplication.run(PricingApplication.class, args);
     }
 
-    /**
-     * Provide ObjectMapper bean for JSON serialization/deserialization.
-     *
-     * @return configured ObjectMapper
-     */
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
+
 }
